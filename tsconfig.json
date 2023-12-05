@@ -9,14 +9,16 @@
     "declaration": true, // Generate declaration files (.d.ts)
     "sourceMap": true, // Generate source maps for easier debugging
     "baseUrl": "./", // Base URL of the application.
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     // Custom Path aliasing for a cleaner developer experience.
     "paths": {
-      "@/*": ["src/*"], // Specify root path.
-      "@enums/*": ["src/libs/enums/*"]
+      "@/*": ["src/*"] // Specify root path.
     }
   },
   "include": [
-    "src/**/*.ts" // Specify the files to be included for compilation
+    "src/**/*.ts", // Specify the files to be included for compilation
+    "src/server.ts"
   ],
   "exclude": [
     "node_modules" // Specify the files to be excluded from compilation
