@@ -21,12 +21,10 @@ class Application {
       res.json({ message: "Hello World!" });
     });
 
-    const info: Array<{ api: string; handler: string }> = [];
-
     // Register routers
     [TaskController].forEach(provider => {
-      const controllerInstance: { [handleName: string]: Handler } =
-        new TaskController() as unknown as { [handleName: string]: Handler };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const instance: { [handleName: string]: Handler } = new provider() as any;
 
       const basePath: string = Reflect.getMetadata("base_path", provider);
       const routers: IRouter[] = Reflect.getMetadata("routers", provider);
@@ -36,20 +34,12 @@ class Application {
       routers.forEach(({ method, path, handlerName }) => {
         expressRouter[method](
           path,
-          controllerInstance[String(handlerName)].bind(controllerInstance)
+          instance[String(handlerName)].bind(instance)
         );
-
-        info.push({
-          api: `${method.toLocaleUpperCase()} ${basePath + path}`,
-          handler: `${controllerInstance.name}.${String(handlerName)}`
-        });
       });
 
-      this._instance.use(basePath, expressRouter);
+      this._instance.use("/api" + basePath, expressRouter);
     });
-
-    // Print API Controller info
-    console.table(info);
   }
 }
 

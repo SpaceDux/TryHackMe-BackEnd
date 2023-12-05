@@ -11,17 +11,24 @@ export class TaskController {
    * @description Get task list
    * @param args  - The arguments of the request.
    * @returns Promise<Task[]>
+   * @todo Validate args
    */
-  @Get("/list/:page/:limit")
+  @Get("/list")
   async getTaskList(req: Request, res: Response): Promise<void> {
-    const args: TaskListArgs = req.params;
+    try {
+      // TODO: Validate args
+      const args: TaskListArgs = req.query;
 
-    const result = await this._taskService.getTaskList({
-      page: parseInt(args?.page?.toString() || "1"),
-      limit: parseInt(args?.limit?.toString() || "10"),
-      archived: args?.archived
-    });
+      const result = await this._taskService.getTaskList({
+        page: args.page || "0",
+        limit: args.limit || "10",
+        archived: args?.archived
+      });
 
-    res.json(result);
+      res.json(result).status(200);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      res.json({ error: error?.message as string }).status(500);
+    }
   }
 }
