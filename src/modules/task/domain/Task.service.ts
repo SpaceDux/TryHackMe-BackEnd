@@ -1,4 +1,8 @@
-import { CreateTaskInputDTO, TaskResponseDTO } from "@/libs/dtos";
+import {
+  CreateTaskInputDTO,
+  TaskResponseDTO,
+  UpdateTaskInputDTO
+} from "@/libs/dtos";
 import { TaskRepository } from "../repository/Task.repository";
 import { TaskListArgsDTO } from "@/libs/dtos";
 
@@ -12,6 +16,7 @@ export class TaskService {
    * @returns
    */
   async getTaskList(args: TaskListArgsDTO): Promise<TaskResponseDTO[]> {
+    console.log("args", args);
     return this._taskRepository.list(args);
   }
 
@@ -31,5 +36,17 @@ export class TaskService {
    */
   async createTask(args: CreateTaskInputDTO): Promise<TaskResponseDTO> {
     return this._taskRepository.create(args);
+  }
+
+  /**
+   * @description Update a task
+   * @param args
+   * @returns
+   */
+  async updateTask(
+    id: string,
+    args: UpdateTaskInputDTO
+  ): Promise<TaskResponseDTO> {
+    return this._taskRepository.update({ id, ...args });
   }
 }

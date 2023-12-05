@@ -10,12 +10,11 @@ export class TaskRepository {
    * @returns Promise<Tasks[]>
    */
   async list(args: TaskListArgsDTO): Promise<Tasks[]> {
+    console.log("args", args);
     return this._prismaClient.tasks.findMany({
-      ...(args?.archived && {
-        where: {
-          archived: args.archived
-        }
-      }),
+      where: {
+        archived: args.archived
+      },
       take: parseInt(args.limit as string),
       skip: parseInt(args.page as string) * parseInt(args.limit as string)
     });
@@ -49,6 +48,29 @@ export class TaskRepository {
   async create(args: CreateTaskInputDTO): Promise<Tasks> {
     return this._prismaClient.tasks.create({
       data: args
+    });
+  }
+
+  /**
+   * @description Update a task
+   * @param args
+   * @returns Promise<Tasks>
+   */
+  async update(args: Partial<Tasks>): Promise<Tasks> {
+    const { id, ...rest } = args;
+    return this._prismaClient.tasks.update({
+      where: {
+        id: id
+      },
+      data: {
+        ...rest,
+        ...(args?.archived === true && {
+          archivedAt: new Date()
+        }),
+        ...(args?.archived === false && {
+          archivedAt: null
+        })
+      }
     });
   }
 }

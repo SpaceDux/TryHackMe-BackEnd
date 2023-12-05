@@ -1,5 +1,9 @@
-import { CreateTaskInputDTO, TaskListArgsDTO } from "@/libs/dtos";
-import { Controller, Get, Post } from "../../../libs/decorators";
+import {
+  CreateTaskInputDTO,
+  TaskListArgsDTO,
+  UpdateTaskInputDTO
+} from "@/libs/dtos";
+import { Controller, Get, Post, Put } from "../../../libs/decorators";
 import { TaskService } from "../domain/Task.service";
 import { Request, Response } from "express";
 import {
@@ -27,7 +31,8 @@ export class TaskController {
       const result = await this._taskService.getTaskList({
         page: args.page || "0",
         limit: args.limit || "10",
-        archived: args?.archived
+        archived:
+          (args?.archived as unknown as string) === "true" ? true : false
       });
 
       res.json(result).status(200);
@@ -98,6 +103,41 @@ export class TaskController {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("[TaskController] createTask error", error);
+      if (
+        error instanceof PrismaClientValidationError ||
+        error instanceof PrismaClientUnknownRequestError ||
+        error instanceof PrismaClientKnownRequestError
+      ) {
+        res
+          .json({ error: "Sorry, something went wrong with that request." })
+          .status(500);
+        return;
+      }
+
+      res.json({ error: error?.message as string }).status(500);
+    }
+  }
+
+  /**
+   * @description Update a task
+   * @param args  - The arguments of the request.
+   * @returns Promise<Task>
+   * @todo Validate args
+   */
+  @Put("/update/:id")
+  async updateTask(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.params.id;
+      // Early exit if no id is provided
+      if (!id) throw new Error("Missing id");
+      const args: UpdateTaskInputDTO = req?.body;
+
+      const result = await this._taskService.updateTask(id, args);
+
+      res.json(result).status(200);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("[TaskController] updateTask error", error);
       if (
         error instanceof PrismaClientValidationError ||
         error instanceof PrismaClientUnknownRequestError ||
