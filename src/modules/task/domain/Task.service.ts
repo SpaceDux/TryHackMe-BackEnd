@@ -1,6 +1,6 @@
-import { TaskResponseDTO } from "@/libs/dtos/Task.dto";
-import { TaskListArgs } from "../../../libs/types/TaskListArgs.type";
+import { CreateTaskInputDTO, TaskResponseDTO } from "@/libs/dtos";
 import { TaskRepository } from "../repository/Task.repository";
+import { TaskListArgsDTO } from "@/libs/dtos";
 
 export class TaskService {
   private readonly _taskRepository: TaskRepository = new TaskRepository();
@@ -11,7 +11,7 @@ export class TaskService {
    * @param args
    * @returns
    */
-  public async getTaskList(args: TaskListArgs): Promise<TaskResponseDTO[]> {
+  async getTaskList(args: TaskListArgsDTO): Promise<TaskResponseDTO[]> {
     return this._taskRepository.list(args);
   }
 
@@ -20,7 +20,16 @@ export class TaskService {
    * @param id
    * @returns
    */
-  public async getTask(id: string): Promise<TaskResponseDTO> {
+  async getTask(id: string): Promise<TaskResponseDTO> {
     return this._taskRepository.get(id);
+  }
+
+  /**
+   * @description Create a new task
+   * @param args
+   * @returns
+   */
+  async createTask(args: CreateTaskInputDTO): Promise<TaskResponseDTO> {
+    return this._taskRepository.create(args);
   }
 }

@@ -1,4 +1,4 @@
-import { TaskListArgs } from "../../../libs/types/TaskListArgs.type";
+import { CreateTaskInputDTO, TaskListArgsDTO } from "@/libs/dtos";
 import { PrismaClient, type Tasks } from "@prisma/client";
 
 export class TaskRepository {
@@ -9,7 +9,7 @@ export class TaskRepository {
    * @param args
    * @returns Promise<Tasks[]>
    */
-  async list(args: TaskListArgs): Promise<Tasks[]> {
+  async list(args: TaskListArgsDTO): Promise<Tasks[]> {
     return this._prismaClient.tasks.findMany({
       ...(args?.archived && {
         where: {
@@ -39,5 +39,16 @@ export class TaskRepository {
     }
 
     return result;
+  }
+
+  /**
+   * @description Create a new task
+   * @param args
+   * @returns Promise<Tasks>
+   */
+  async create(args: CreateTaskInputDTO): Promise<Tasks> {
+    return this._prismaClient.tasks.create({
+      data: args
+    });
   }
 }
