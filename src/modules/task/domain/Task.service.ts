@@ -1,4 +1,5 @@
 import {
+  BooleanResponseDTO,
   CreateTaskInputDTO,
   TaskResponseDTO,
   UpdateTaskInputDTO
@@ -48,5 +49,19 @@ export class TaskService {
     args: UpdateTaskInputDTO
   ): Promise<TaskResponseDTO> {
     return this._taskRepository.update({ id, ...args });
+  }
+
+  /**
+   * @description Delete a task
+   * @param id
+   * @returns
+   */
+  async deleteTask(id: string): Promise<BooleanResponseDTO> {
+    const success = await this._taskRepository.delete(id);
+
+    return {
+      success,
+      message: success ? "Task deleted" : "Task not deleted"
+    };
   }
 }

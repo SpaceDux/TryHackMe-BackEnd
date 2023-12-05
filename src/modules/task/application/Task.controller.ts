@@ -3,7 +3,7 @@ import {
   TaskListArgsDTO,
   UpdateTaskInputDTO
 } from "@/libs/dtos";
-import { Controller, Get, Post, Put } from "../../../libs/decorators";
+import { Controller, Delete, Get, Post, Put } from "../../../libs/decorators";
 import { TaskService } from "../domain/Task.service";
 import { Request, Response } from "express";
 import {
@@ -19,7 +19,7 @@ export class TaskController {
   /**
    * @description Get task list
    * @param args  - The arguments of the request.
-   * @returns Promise<Task[]>
+   * @returns Promise<TaskResponseDTO[]>
    * @todo Validate args
    */
   @Get("/list")
@@ -89,7 +89,7 @@ export class TaskController {
   /**
    * @description Create a new task
    * @param args  - The arguments of the request.
-   * @returns Promise<Task>
+   * @returns Promise<TaskResponseDTO>
    * @todo Validate args
    */
   @Post("/create")
@@ -121,7 +121,7 @@ export class TaskController {
   /**
    * @description Update a task
    * @param args  - The arguments of the request.
-   * @returns Promise<Task>
+   * @returns Promise<TaskResponseDTO>
    * @todo Validate args
    */
   @Put("/update/:id")
@@ -150,6 +150,40 @@ export class TaskController {
       }
 
       res.json({ error: error?.message as string }).status(500);
+    }
+  }
+
+  /**
+   * @description Delete a task
+   * @param id  - The id of the task.
+   * @returns Promise<BooleanResponseDTO>
+   */
+  @Delete("/:id")
+  async deleteTask(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.params.id;
+      // Early exit if no id is provided
+      if (!id) throw new Error("Missing id");
+
+      const result = await this._taskService.deleteTask(id);
+      res.json(result).status(200);
+      return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("[TaskController] deleteTask error", error);
+      if (
+        error instanceof PrismaClientValidationError ||
+        error instanceof PrismaClientUnknownRequestError ||
+        error instanceof PrismaClientKnownRequestError
+      ) {
+        res
+          .json({ error: "Sorry, something went wrong with that request." })
+          .status(500);
+        return;
+      }
+
+      res.json({ error: error?.message as string }).status(500);
+      return;
     }
   }
 }

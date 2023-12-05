@@ -73,4 +73,65 @@ export class TaskRepository {
       }
     });
   }
+
+  /**
+   * @description Delete a task
+   * @param id
+   * @returns Promise<Tasks>
+   */
+  async delete(id: string): Promise<boolean> {
+    return this._prismaClient.$transaction(async trx => {
+      // Fetch the task.
+      const fetchTask = await trx.tasks.findUnique({
+        where: {
+          id
+        }
+      });
+
+      if (!fetchTask) {
+        throw new Error("Task not found");
+      }
+
+      // Fetch all tasks that have a relation to this task.
+      if (fetchTask?.relatedTo?.length) {
+        const relations = await trx.tasks.findMany({
+          where: {
+            id: {
+              in: fetchTask.relatedTo
+            }
+          }
+        });
+
+        // Remove this task id from relations.
+        relations.forEach(async relation => {
+          await trx.tasks.update({
+            where: {
+              id: relation.id
+            },
+            data: {
+              relatedTo: {
+                set: relation.relatedTo.filter(item => item !== id)
+              }
+            }
+          });
+        });
+      }
+
+      // Delete all comments that have a relation to this task.
+      await trx.comments.deleteMany({
+        where: {
+          taskId: id
+        }
+      });
+
+      // Delete the task.
+      await trx.tasks.delete({
+        where: {
+          id
+        }
+      });
+
+      return true;
+    });
+  }
 }
