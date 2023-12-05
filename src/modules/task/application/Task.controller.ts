@@ -1,4 +1,4 @@
-import { Controller, Get } from "../../../libs/decorators";
+import { Controller, Get, Post } from "../../../libs/decorators";
 import { TaskListArgs } from "../../../libs/types";
 import { TaskService } from "../domain/Task.service";
 import { Request, Response } from "express";
@@ -25,6 +25,22 @@ export class TaskController {
         archived: args?.archived
       });
 
+      res.json(result).status(200);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      res.json({ error: error?.message as string }).status(500);
+    }
+  }
+
+  /**
+   * @description Get a single task by id
+   * @param id  - The id of the task.
+   * @returns Promise<Task>
+   */
+  @Get("/:id")
+  async getTask(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await this._taskService.getTask(req.params.id);
       res.json(result).status(200);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

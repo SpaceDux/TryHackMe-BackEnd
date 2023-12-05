@@ -7,10 +7,9 @@ export class TaskRepository {
   /**
    * @description Fetch a list of tasks
    * @param args
-   * @returns
+   * @returns Promise<Tasks[]>
    */
   async list(args: TaskListArgs): Promise<Tasks[]> {
-    throw new Error("Method not implemented.");
     return this._prismaClient.tasks.findMany({
       ...(args?.archived && {
         where: {
@@ -20,5 +19,25 @@ export class TaskRepository {
       take: parseInt(args.limit as string),
       skip: parseInt(args.page as string) * parseInt(args.limit as string)
     });
+  }
+
+  /**
+   * @description Fetch a single task by id
+   * @param id
+   * @returns Promise<Tasks>
+   */
+  async get(id: string): Promise<Tasks> {
+    const result = await this._prismaClient.tasks.findFirst({
+      where: {
+        id
+      }
+    });
+
+    // When the task is not found, exit with an error
+    if (!result) {
+      throw new Error("Task not found");
+    }
+
+    return result;
   }
 }

@@ -14,4 +14,13 @@ export class TaskService {
   public async getTaskList(args: TaskListArgs): Promise<TaskResponseDTO[]> {
     return this._taskRepository.list(args);
   }
+
+  /**
+   * @description Get a single task by id
+   * @param id
+   * @returns
+   */
+  public async getTask(id: string): Promise<TaskResponseDTO> {
+    return this._taskRepository.get(id);
+  }
 }
