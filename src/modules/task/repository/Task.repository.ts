@@ -10,7 +10,6 @@ export class TaskRepository {
    * @returns Promise<Tasks[]>
    */
   async getAll(args: TaskListArgsDTO): Promise<Tasks[]> {
-    console.log("args", args);
     return this._prismaClient.tasks.findMany({
       where: {
         archived: args.archived
@@ -130,11 +129,8 @@ export class TaskRepository {
           item => !(relatedTo || []).includes(item.id)
         );
 
-        console.log("relatedTasksToDelete", relatedTasksToDelete);
-
         // Remove this task id from relations.
         for (const relation of relatedTasksToDelete) {
-          console.log("relation", relation);
           await trx.tasks.update({
             where: {
               id: relation.id
