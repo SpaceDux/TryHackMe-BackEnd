@@ -23,12 +23,12 @@ export class TaskController {
    * @todo Validate args
    */
   @Get("/list")
-  async getTaskList(req: Request, res: Response): Promise<void> {
+  async getTasks(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Validate args
       const args: TaskListArgsDTO = req.query;
 
-      const result = await this._taskService.getTaskList({
+      const result = await this._taskService.getTasks({
         page: args.page || "0",
         limit: args.limit || "10",
         archived:

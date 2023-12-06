@@ -9,7 +9,7 @@ export class TaskRepository {
    * @param args
    * @returns Promise<Tasks[]>
    */
-  async list(args: TaskListArgsDTO): Promise<Tasks[]> {
+  async getAll(args: TaskListArgsDTO): Promise<Tasks[]> {
     console.log("args", args);
     return this._prismaClient.tasks.findMany({
       where: {
@@ -46,8 +46,48 @@ export class TaskRepository {
    * @returns Promise<Tasks>
    */
   async create(args: CreateTaskInputDTO): Promise<Tasks> {
-    return this._prismaClient.tasks.create({
-      data: args
+    return this._prismaClient.$transaction(async trx => {
+      const { relatedTo, ...rest } = args;
+
+      // Create the task.
+      const task = await trx.tasks.create({
+        data: {
+          ...rest,
+          relatedTo: [...(relatedTo || [])]
+        }
+      });
+
+      // Check if related tasks exist.
+      if (relatedTo?.length) {
+        const relatedTasks = await trx.tasks.findMany({
+          where: {
+            id: {
+              in: relatedTo
+            }
+          }
+        });
+
+        // Check if all related tasks exist.
+        if (relatedTasks.length !== relatedTo.length) {
+          throw new Error("Related tasks not found");
+        }
+
+        // Add the task id to the related tasks.
+        for (const relatedTask of relatedTasks) {
+          await trx.tasks.update({
+            where: {
+              id: relatedTask.id
+            },
+            data: {
+              relatedTo: {
+                set: [...relatedTask.relatedTo, task.id]
+              }
+            }
+          });
+        }
+      }
+
+      return task;
     });
   }
 
@@ -57,20 +97,102 @@ export class TaskRepository {
    * @returns Promise<Tasks>
    */
   async update(args: Partial<Tasks>): Promise<Tasks> {
-    const { id, ...rest } = args;
-    return this._prismaClient.tasks.update({
-      where: {
-        id: id
-      },
-      data: {
-        ...rest,
-        ...(args?.archived === true && {
-          archivedAt: new Date()
-        }),
-        ...(args?.archived === false && {
-          archivedAt: null
-        })
+    return this._prismaClient.$transaction(async trx => {
+      const { id, relatedTo, ...rest } = args;
+      // Fetch the task.
+      const fetchTask = await trx.tasks.findUnique({
+        where: {
+          id: id
+        }
+      });
+
+      // Check if related tasks exist. else exit
+      if (!fetchTask) {
+        throw new Error("Task not found");
       }
+
+      // Check if related tasks exist.
+      if (
+        relatedTo?.length ||
+        fetchTask.relatedTo?.length !== relatedTo?.length
+      ) {
+        const relatedTasks = await trx.tasks.findMany({
+          where: {
+            id: {
+              in: fetchTask.relatedTo
+            }
+          }
+        });
+
+        // check if relation exists in record but not in args
+        const relatedTasksToDelete = relatedTasks.filter(
+          item => !(relatedTo || []).includes(item.id)
+        );
+
+        console.log("relatedTasksToDelete", relatedTasksToDelete);
+
+        // Remove this task id from relations.
+        for (const relation of relatedTasksToDelete) {
+          console.log("relation", relation);
+          await trx.tasks.update({
+            where: {
+              id: relation.id
+            },
+            data: {
+              relatedTo: {
+                set: relation.relatedTo.filter(item => item !== id)
+              }
+            }
+          });
+        }
+
+        // check if relation exists in args but not in record
+        const relatedTasksToAdd = (relatedTo || []).filter(
+          item => !fetchTask.relatedTo.includes(item)
+        );
+
+        // Add the task id to the related tasks.
+        for (const relatedTaskId of relatedTasksToAdd) {
+          const relatedTask = await trx.tasks.findUnique({
+            where: {
+              id: relatedTaskId
+            }
+          });
+
+          // Check if related task exist. else exit
+          if (!relatedTask) {
+            throw new Error("Related task not found");
+          }
+
+          await trx.tasks.update({
+            where: {
+              id: relatedTask.id
+            },
+            data: {
+              relatedTo: {
+                set: [...relatedTask.relatedTo, fetchTask.id]
+              }
+            }
+          });
+        }
+      }
+
+      // Update the task.
+      return trx.tasks.update({
+        where: {
+          id: id
+        },
+        data: {
+          ...rest,
+          relatedTo,
+          ...(args?.archived === true && {
+            archivedAt: new Date()
+          }),
+          ...(args?.archived === false && {
+            archivedAt: null
+          })
+        }
+      });
     });
   }
 
