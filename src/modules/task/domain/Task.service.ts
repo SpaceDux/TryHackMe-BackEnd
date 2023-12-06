@@ -17,7 +17,6 @@ export class TaskService {
    * @returns
    */
   async getTasks(args: TaskListArgsDTO): Promise<TaskResponseDTO[]> {
-    console.log("args", args);
     return this._taskRepository.getAll(args);
   }
 

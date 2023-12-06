@@ -99,6 +99,7 @@ export class TaskRepository {
   async update(args: Partial<Tasks>): Promise<Tasks> {
     return this._prismaClient.$transaction(async trx => {
       const { id, relatedTo, ...rest } = args;
+
       // Fetch the task.
       const fetchTask = await trx.tasks.findUnique({
         where: {

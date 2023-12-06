@@ -133,7 +133,7 @@ export class TaskController {
       const id = req.params.id;
       // Early exit if no id is provided
       if (!id) throw new Error("Missing id");
-      const args: UpdateTaskInputDTO = req?.body;
+      const args: UpdateTaskInputDTO = req.body;
 
       const result = await this._taskService.updateTask(id, args);
 
