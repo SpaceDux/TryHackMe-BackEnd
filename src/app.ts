@@ -1,4 +1,5 @@
 import express, { Application as ExpressApplication, Handler } from "express";
+import cors from "cors";
 import { IRouter } from "./libs/decorators";
 
 // Controllers
@@ -14,6 +15,7 @@ class Application {
   constructor() {
     this._instance = express();
     this._instance.use(express.json());
+    this._instance.use(cors()); // Wildcard as this is a demo app
     this.registerRouters();
   }
   private registerRouters() {

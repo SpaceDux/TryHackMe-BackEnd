@@ -12,6 +12,9 @@ import {
   PrismaClientValidationError
 } from "@prisma/client/runtime/library";
 
+/**
+ * @description Task controller - Handles all the task related routes
+ */
 @Controller("/task")
 export class TaskController {
   private readonly _taskService: TaskService = new TaskService();
